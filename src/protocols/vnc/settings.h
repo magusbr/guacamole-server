@@ -26,6 +26,13 @@
 
 #include "config.h"
 
+#include <stdbool.h>
+
+/**
+ * The filename to use for the screen recording, if not specified.
+ */
+#define GUAC_VNC_DEFAULT_RECORDING_NAME "recording"
+
 /**
  * VNC-specific client data.
  */
@@ -120,6 +127,23 @@ typedef struct guac_vnc_settings {
      * to use the encoding required by the VNC standard.
      */
     char* clipboard_encoding;
+
+    /**
+     * The path in which the screen recording should be saved, if enabled. If
+     * no screen recording should be saved, this will be NULL.
+     */
+    char* recording_path;
+
+    /**
+     * The filename to use for the screen recording, if enabled.
+     */
+    char* recording_name;
+
+    /**
+     * Whether the screen recording path should be automatically created if it
+     * does not already exist.
+     */
+    bool create_recording_path;
 
 } guac_vnc_settings;
 

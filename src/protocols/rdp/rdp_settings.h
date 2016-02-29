@@ -57,6 +57,11 @@
 #define RDP_DEFAULT_DEPTH  16 
 
 /**
+ * The filename to use for the screen recording, if not specified.
+ */
+#define GUAC_RDP_DEFAULT_RECORDING_NAME "recording"
+
+/**
  * All supported combinations of security types.
  */
 typedef enum guac_rdp_security {
@@ -279,6 +284,23 @@ typedef struct guac_rdp_settings {
      * destination VM.
      */
     char* preconnection_blob;
+
+    /**
+     * The path in which the screen recording should be saved, if enabled. If
+     * no screen recording should be saved, this will be NULL.
+     */
+    char* recording_path;
+
+    /**
+     * The filename to use for the screen recording, if enabled.
+     */
+    char* recording_name;
+
+    /**
+     * Whether the screen recording path should be automatically created if it
+     * does not already exist.
+     */
+    int create_recording_path;
 
 } guac_rdp_settings;
 

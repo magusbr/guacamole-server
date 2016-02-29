@@ -30,6 +30,7 @@
 #include "guac_clipboard.h"
 #include "guac_cursor.h"
 #include "guac_display.h"
+#include "guac_recording.h"
 #include "log.h"
 #include "settings.h"
 #include "vnc.h"
@@ -169,13 +170,14 @@ void* guac_vnc_client_thread(void* data) {
 
     guac_client* client = (guac_client*) data;
     guac_vnc_client* vnc_client = (guac_vnc_client*) client->data;
+    guac_vnc_settings* settings = vnc_client->settings;
 
     /* Configure clipboard encoding */
     if (guac_vnc_set_clipboard_encoding(client,
-                vnc_client->settings->clipboard_encoding)) {
+                settings->clipboard_encoding)) {
         guac_client_log(client, GUAC_LOG_INFO,
                 "Using non-standard VNC clipboard encoding: '%s'.",
-                vnc_client->settings->clipboard_encoding);
+                settings->clipboard_encoding);
     }
 
     /* Ensure connection is kept alive during lengthy connects */
@@ -187,7 +189,7 @@ void* guac_vnc_client_thread(void* data) {
 
     /* Attempt connection */
     rfbClient* rfb_client = guac_vnc_get_client(client);
-    int retries_remaining = vnc_client->settings->retries;
+    int retries_remaining = settings->retries;
 
     /* If unsuccessful, retry as many times as specified */
     while (!rfb_client && retries_remaining > 0) {
@@ -335,6 +337,14 @@ void* guac_vnc_client_thread(void* data) {
     /* Set remaining client data */
     vnc_client->rfb_client = rfb_client;
 
+    /* Set up screen recording, if requested */
+    if (settings->recording_path != NULL) {
+        guac_common_recording_create(client,
+                settings->recording_path,
+                settings->recording_name,
+                settings->create_recording_path);
+    }
+
     /* Send name */
     guac_protocol_send_name(client->socket, rfb_client->desktopName);
 
@@ -343,9 +353,9 @@ void* guac_vnc_client_thread(void* data) {
             rfb_client->width, rfb_client->height);
 
     /* If not read-only, set an appropriate cursor */
-    if (vnc_client->settings->read_only == 0) {
+    if (settings->read_only == 0) {
 
-        if (vnc_client->settings->remote_cursor)
+        if (settings->remote_cursor)
             guac_common_cursor_set_dot(vnc_client->display->cursor);
         else
             guac_common_cursor_set_pointer(vnc_client->display->cursor);
