@@ -50,7 +50,7 @@ SUBDIRS += src/terminal
 endif
 
 if ENABLE_RDP
-#SUBDIRS += src/protocols/rdp
+SUBDIRS += src/protocols/rdp
 endif
 
 if ENABLE_SSH
