@@ -38,8 +38,7 @@ noinst_HEADERS =                \
     scrollbar.h                 \
     terminal.h                  \
     terminal_handlers.h         \
-    types.h                     \
-    typescript.h
+    types.h
 
 libguac_terminal_la_SOURCES =   \
     blank.c                     \
@@ -53,8 +52,7 @@ libguac_terminal_la_SOURCES =   \
     pointer.c                   \
     scrollbar.c                 \
     terminal.c                  \
-    terminal_handlers.c         \
-    typescript.c
+    terminal_handlers.c
 
 libguac_terminal_la_CFLAGS = \
     -Werror -Wall -pedantic  \

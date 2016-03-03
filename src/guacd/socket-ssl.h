@@ -56,7 +56,7 @@ typedef struct guac_socket_ssl_data {
 /**
  * Creates a new guac_socket which will use SSL for all communication.
  */
-guac_socket* guac_socket_open_secure(SSL_CTX* context, int fd);
+guac_socket* guac_socket_open_secure(SSL_CTX* context, int fd, int dump_flag, char* dump_path);
 
 #endif
 

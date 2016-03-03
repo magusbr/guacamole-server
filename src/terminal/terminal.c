@@ -35,9 +35,7 @@
 #include "terminal.h"
 #include "terminal_handlers.h"
 #include "types.h"
-#include "typescript.h"
 
-#include <errno.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -328,12 +326,6 @@ guac_terminal* guac_terminal_create(guac_client* client,
         return NULL;
     }
 
-    /* Init pipe stream (output to display by default) */
-    term->pipe_stream = NULL;
-
-    /* No typescript by default */
-    term->typescript = NULL;
-
     /* Init terminal lock */
     pthread_mutex_init(&(term->lock), NULL);
 
@@ -376,13 +368,7 @@ guac_terminal* guac_terminal_create(guac_client* client,
 }
 
 void guac_terminal_free(guac_terminal* term) {
-
-    /* Close and flush any open pipe stream */
-    guac_terminal_pipe_stream_close(term);
-
-    /* Close and flush any active typescript */
-    guac_terminal_typescript_free(term->typescript);
-
+    
     /* Close terminal output pipe */
     close(term->stdout_pipe_fd[1]);
     close(term->stdout_pipe_fd[0]);
@@ -673,18 +659,8 @@ void guac_terminal_commit_cursor(guac_terminal* term) {
 int guac_terminal_write(guac_terminal* term, const char* c, int size) {
 
     while (size > 0) {
-
-        /* Read and advance to next character */
-        char current = *(c++);
+        term->char_handler(term, *(c++));
         size--;
-
-        /* Write character to typescript, if any */
-        if (term->typescript != NULL)
-            guac_terminal_typescript_write(term->typescript, current);
-
-        /* Handle character and its meaning */
-        term->char_handler(term, current);
-
     }
 
     return 0;
@@ -1360,16 +1336,9 @@ int guac_terminal_resize(guac_terminal* terminal, int width, int height) {
 }
 
 void guac_terminal_flush(guac_terminal* terminal) {
-
-    /* Flush typescript if in use */
-    if (terminal->typescript != NULL)
-        guac_terminal_typescript_flush(terminal->typescript);
-
-    /* Flush display state */
     guac_terminal_commit_cursor(terminal);
     guac_terminal_display_flush(terminal->display);
     guac_terminal_scrollbar_flush(terminal->scrollbar);
-
 }
 
 void guac_terminal_lock(guac_terminal* terminal) {
@@ -1757,107 +1726,5 @@ int guac_terminal_next_tab(guac_terminal* term, int column) {
     }
 
     return tabstop;
-}
-
-void guac_terminal_pipe_stream_open(guac_terminal* term, const char* name) {
-
-    guac_client* client = term->client;
-    guac_socket* socket = client->socket;
-
-    /* Close existing stream, if any */
-    guac_terminal_pipe_stream_close(term);
-
-    /* Allocate and assign new pipe stream */
-    term->pipe_stream = guac_client_alloc_stream(client);
-    term->pipe_buffer_length = 0;
-
-    /* Open new pipe stream */
-    guac_protocol_send_pipe(socket, term->pipe_stream, "text/plain", name);
-
-    /* Log redirect at debug level */
-    guac_client_log(client, GUAC_LOG_DEBUG,
-            "Terminal output now redirected to pipe '%s'.", name);
-
-}
-
-void guac_terminal_pipe_stream_write(guac_terminal* term, char c) {
-
-    /* Append byte to buffer only if pipe is open */
-    if (term->pipe_stream != NULL) {
-
-        /* Flush buffer if no space is available */
-        if (term->pipe_buffer_length == sizeof(term->pipe_buffer))
-            guac_terminal_pipe_stream_flush(term);
-
-        /* Append single byte to buffer */
-        term->pipe_buffer[term->pipe_buffer_length++] = c;
-
-    }
-
-}
-
-void guac_terminal_pipe_stream_flush(guac_terminal* term) {
-
-    guac_client* client = term->client;
-    guac_socket* socket = client->socket;
-    guac_stream* pipe_stream = term->pipe_stream;
-
-    /* Write blob if data exists in buffer */
-    if (pipe_stream != NULL && term->pipe_buffer_length > 0) {
-        guac_protocol_send_blob(socket, pipe_stream,
-                term->pipe_buffer, term->pipe_buffer_length);
-        term->pipe_buffer_length = 0;
-    }
-
-}
-
-void guac_terminal_pipe_stream_close(guac_terminal* term) {
-
-    guac_client* client = term->client;
-    guac_socket* socket = client->socket;
-    guac_stream* pipe_stream = term->pipe_stream;
-
-    /* Close any existing pipe */
-    if (pipe_stream != NULL) {
-
-        /* Write end of stream */
-        guac_terminal_pipe_stream_flush(term);
-        guac_protocol_send_end(socket, pipe_stream);
-
-        /* Destroy stream */
-        guac_client_free_stream(client, pipe_stream);
-        term->pipe_stream = NULL;
-
-        /* Log redirect at debug level */
-        guac_client_log(client, GUAC_LOG_DEBUG,
-                "Terminal output now redirected to display.");
-
-    }
-
-}
-
-int guac_terminal_create_typescript(guac_terminal* term, const char* path,
-        const char* name, int create_path) {
-
-    /* Create typescript */
-    term->typescript = guac_terminal_typescript_alloc(path, name, create_path);
-
-    /* Log failure */
-    if (term->typescript == NULL) {
-        guac_client_log(term->client, GUAC_LOG_ERROR,
-                "Creation of typescript failed: %s", strerror(errno));
-        return 1;
-    }
-
-    /* If typescript was successfully created, log filenames */
-    guac_client_log(term->client, GUAC_LOG_INFO,
-            "Typescript of terminal session will be saved to \"%s\". "
-            "Timing file is \"%s\".",
-            term->typescript->data_filename,
-            term->typescript->timing_filename);
-
-    /* Typescript creation succeeded */
-    return 0;
-
 }
 

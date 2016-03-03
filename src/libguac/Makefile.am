@@ -38,15 +38,16 @@ libguacinc_HEADERS =                  \
     guacamole/error.h                 \
     guacamole/error-types.h           \
     guacamole/hash.h                  \
+    guacamole/instruction-constants.h \
+    guacamole/instruction.h           \
+    guacamole/instruction-types.h     \
     guacamole/layer.h                 \
     guacamole/layer-types.h           \
     guacamole/object.h                \
     guacamole/object-types.h          \
-    guacamole/parser-constants.h      \
-    guacamole/parser.h                \
-    guacamole/parser-types.h          \
     guacamole/plugin-constants.h      \
     guacamole/plugin.h                \
+    guacamole/plugin-types.h          \
     guacamole/pool.h                  \
     guacamole/pool-types.h            \
     guacamole/protocol.h              \
@@ -59,30 +60,26 @@ libguacinc_HEADERS =                  \
     guacamole/stream-types.h          \
     guacamole/timestamp.h             \
     guacamole/timestamp-types.h       \
-    guacamole/unicode.h               \
-    guacamole/user.h                  \
-    guacamole/user-constants.h        \
-    guacamole/user-fntypes.h          \
-    guacamole/user-types.h
+    guacamole/unicode.h
 
 noinst_HEADERS =      \
-    id.h              \
+    client-handlers.h \
     encode-jpeg.h     \
     encode-png.h      \
     palette.h         \
-    user-handlers.h   \
     raw_encoder.h
 
 libguac_la_SOURCES =  \
     audio.c           \
     client.c          \
+    client-handlers.c \
     encode-jpeg.c     \
     encode-png.c      \
     error.c           \
     hash.c            \
-    id.c              \
+    instruction.c     \
     palette.c         \
-    parser.c          \
+    plugin.c          \
     pool.c            \
     protocol.c        \
     raw_encoder.c     \
@@ -90,9 +87,7 @@ libguac_la_SOURCES =  \
     socket-fd.c       \
     socket-nest.c     \
     timestamp.c       \
-    unicode.c         \
-    user.c            \
-    user-handlers.c
+    unicode.c
 
 # Compile WebP support if available
 if ENABLE_WEBP

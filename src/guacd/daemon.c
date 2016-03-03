@@ -141,7 +141,7 @@ static void guacd_free_mimetypes(char** mimetypes) {
  * Creates a new guac_client for the connection on the given socket, adding
  * it to the client map based on its ID.
  */
-static void guacd_handle_connection(guacd_client_map* map, guac_socket* socket) {
+static void guacd_handle_connection(guacd_client_map* map, guac_socket* socket, guacd_config* config) {
 
     guac_client* client;
     guac_client_plugin* plugin;
@@ -342,6 +342,10 @@ static void guacd_handle_connection(guacd_client_map* map, guac_socket* socket) 
 
     client->socket = socket;
     client->log_handler = guacd_client_log;
+
+    /* Get args for keystrokes */
+    client->keystrokes_flag = config->keys;
+    client->keystrokes_path = config->keys_path;
 
     /* Store client */
     if (guacd_client_map_add(map, client))
@@ -712,7 +716,7 @@ int main(int argc, char* argv[]) {
 
             /* If SSL chosen, use it */
             if (ssl_context != NULL) {
-                socket = guac_socket_open_secure(ssl_context, connected_socket_fd);
+                socket = guac_socket_open_secure(ssl_context, connected_socket_fd, config->dump, config->dump_path);
                 if (socket == NULL) {
                     guacd_log_guac_error(GUAC_LOG_ERROR,
                             "Unable to set up SSL/TLS");
@@ -720,13 +724,13 @@ int main(int argc, char* argv[]) {
                 }
             }
             else
-                socket = guac_socket_open(connected_socket_fd);
+                socket = guac_socket_open(connected_socket_fd, config->dump, config->dump_path);
 #else
             /* Open guac_socket */
-            socket = guac_socket_open(connected_socket_fd);
+            socket = guac_socket_open(connected_socket_fd, config->dump, config->dump_path);
 #endif
 
-            guacd_handle_connection(map, socket);
+            guacd_handle_connection(map, socket, config);
             close(connected_socket_fd);
             return 0;
         }

@@ -35,7 +35,7 @@ int guacd_conf_parse_args(guacd_config* config, int argc, char** argv) {
 
     /* Parse arguments */
     int opt;
-    while ((opt = getopt(argc, argv, "l:b:p:L:C:K:f")) != -1) {
+    while ((opt = getopt(argc, argv, "l:b:p:L:C:K:f:d:k:")) != -1) {
 
         /* -l: Bind port */
         if (opt == 'l') {
@@ -58,6 +58,18 @@ int guacd_conf_parse_args(guacd_config* config, int argc, char** argv) {
         else if (opt == 'p') {
             free(config->pidfile);
             config->pidfile = strdup(optarg);
+        }
+
+        /* -d: DUMP path */
+        else if (opt == 'd') {
+            config->dump = 1;
+            config->dump_path = optarg;
+        }
+
+        /* -k: KEYSTROKES path */
+        else if (opt == 'k') {
+            config->keys = 1;
+            config->keys_path = optarg;
         }
 
         /* -L: Log level */
@@ -103,6 +115,8 @@ int guacd_conf_parse_args(guacd_config* config, int argc, char** argv) {
                     " [-l LISTENPORT]"
                     " [-b LISTENADDRESS]"
                     " [-p PIDFILE]"
+                    " [-d DUMPDIR]"
+                    " [-k KEYSTROKESDUMPDIR]"
                     " [-L LEVEL]"
 #ifdef ENABLE_SSL
                     " [-C CERTIFICATE_FILE]"

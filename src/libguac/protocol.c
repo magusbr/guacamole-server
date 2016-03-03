@@ -30,6 +30,7 @@
 #include "socket.h"
 #include "stream.h"
 #include "unicode.h"
+#include "client.h"
 
 #include <cairo/cairo.h>
 

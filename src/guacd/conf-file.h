@@ -52,6 +52,26 @@ typedef struct guacd_config {
      */
     int foreground;
 
+    /**
+     * Enable socket dump
+     */
+    int dump;
+
+    /**
+     * Path to store socket dump
+     */
+    char* dump_path;
+
+    /**
+     * Enable keystrokes dump
+     */
+    int keys;
+
+    /**
+     * Path to store keystrokes dump
+     */
+    char* keys_path;
+
 #ifdef ENABLE_SSL
     /**
      * SSL certificate file.

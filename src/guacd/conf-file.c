@@ -181,6 +181,10 @@ guacd_config* guacd_conf_load() {
     conf->bind_host = NULL;
     conf->bind_port = strdup("4822");
     conf->pidfile = NULL;
+    conf->dump = 0;
+    conf->dump_path = NULL;
+    conf->keys = 0;
+    conf->keys_path = NULL;
     conf->foreground = 0;
     conf->max_log_level = GUAC_LOG_INFO;
 

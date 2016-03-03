@@ -105,40 +105,18 @@ ssize_t __guac_socket_nest_write_handler(guac_socket* socket,
 
 }
 
-/**
- * Frees all implementation-specific data associated with the given socket, but
- * not the socket object itself.
- *
- * @param socket
- *     The guac_socket whose associated data should be freed.
- *
- * @return
- *     Zero if the data was successfully freed, non-zero otherwise. This
- *     implementation always succeeds, and will always return zero.
- */
-static int __guac_socket_nest_free_handler(guac_socket* socket) {
-
-    /* Free associated data */
-    __guac_socket_nest_data* data = (__guac_socket_nest_data*) socket->data;
-    free(data);
-
-    return 0;
-
-}
-
-guac_socket* guac_socket_nest(guac_socket* parent, int index) {
+guac_socket* guac_socket_nest(guac_socket* parent, int index, int dump_flag, char* dump_path) {
 
     /* Allocate socket and associated data */
-    guac_socket* socket = guac_socket_alloc();
+    guac_socket* socket = guac_socket_alloc(dump_flag, dump_path);
     __guac_socket_nest_data* data = malloc(sizeof(__guac_socket_nest_data));
 
     /* Store file descriptor as socket data */
     data->parent = parent;
     socket->data = data;
 
-    /* Set write and free handlers */
+    /* Set write handler */
     socket->write_handler  = __guac_socket_nest_write_handler;
-    socket->free_handler   = __guac_socket_nest_free_handler;
 
     return socket;
 

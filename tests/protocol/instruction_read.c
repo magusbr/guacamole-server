@@ -30,7 +30,7 @@
 
 #include <CUnit/Basic.h>
 #include <guacamole/error.h>
-#include <guacamole/parser.h>
+#include <guacamole/instruction.h>
 #include <guacamole/protocol.h>
 #include <guacamole/socket.h>
 
@@ -71,7 +71,7 @@ void test_instruction_read() {
     else {
 
         guac_socket* socket;
-        guac_parser* parser;
+        guac_instruction* instruction;
 
         close(wfd);
 
@@ -79,30 +79,28 @@ void test_instruction_read() {
         socket = guac_socket_open(rfd);
         CU_ASSERT_PTR_NOT_NULL_FATAL(socket);
 
-        /* Allocate parser */
-        parser = guac_parser_alloc();
-        CU_ASSERT_PTR_NOT_NULL_FATAL(parser);
-
         /* Read instruction */
-        CU_ASSERT_EQUAL_FATAL(guac_parser_read(parser, socket, 1000000), 0);
+        instruction = guac_instruction_read(socket, 1000000);
+        CU_ASSERT_PTR_NOT_NULL_FATAL(instruction);
         
         /* Validate contents */
-        CU_ASSERT_STRING_EQUAL(parser->opcode, "test");
-        CU_ASSERT_EQUAL_FATAL(parser->argc, 3);
-        CU_ASSERT_STRING_EQUAL(parser->argv[0], "a" UTF8_4 "b");
-        CU_ASSERT_STRING_EQUAL(parser->argv[1], "12345");
-        CU_ASSERT_STRING_EQUAL(parser->argv[2], "a" UTF8_8 "c");
+        CU_ASSERT_STRING_EQUAL(instruction->opcode, "test");
+        CU_ASSERT_EQUAL_FATAL(instruction->argc, 3);
+        CU_ASSERT_STRING_EQUAL(instruction->argv[0], "a" UTF8_4 "b");
+        CU_ASSERT_STRING_EQUAL(instruction->argv[1], "12345");
+        CU_ASSERT_STRING_EQUAL(instruction->argv[2], "a" UTF8_8 "c");
         
         /* Read another instruction */
-        CU_ASSERT_EQUAL_FATAL(guac_parser_read(parser, socket, 1000000), 0);
+        guac_instruction_free(instruction);
+        instruction = guac_instruction_read(socket, 1000000);
 
         /* Validate contents */
-        CU_ASSERT_STRING_EQUAL(parser->opcode, "test2");
-        CU_ASSERT_EQUAL_FATAL(parser->argc, 2);
-        CU_ASSERT_STRING_EQUAL(parser->argv[0], "hellohello");
-        CU_ASSERT_STRING_EQUAL(parser->argv[1], "worldworldworld");
+        CU_ASSERT_STRING_EQUAL(instruction->opcode, "test2");
+        CU_ASSERT_EQUAL_FATAL(instruction->argc, 2);
+        CU_ASSERT_STRING_EQUAL(instruction->argv[0], "hellohello");
+        CU_ASSERT_STRING_EQUAL(instruction->argv[1], "worldworldworld");
 
-        guac_parser_free(parser);
+        guac_instruction_free(instruction);
         guac_socket_free(socket);
 
     }

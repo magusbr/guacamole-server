@@ -32,7 +32,6 @@
 #include "guac_clipboard.h"
 #include "scrollbar.h"
 #include "types.h"
-#include "typescript.h"
 
 #include <pthread.h>
 #include <stdbool.h>
@@ -149,32 +148,6 @@ struct guac_terminal {
      * this pipe.
      */
     int stdin_pipe_fd[2];
-
-    /**
-     * The currently-open pipe stream to which all terminal output should be
-     * written, if any. If no pipe stream is open, terminal output will be
-     * written to the terminal display, and this value will be NULL.
-     */
-    guac_stream* pipe_stream;
-
-    /**
-     * Buffer of data pending write to the pipe_stream. Data within this buffer
-     * will be flushed to the pipe_stream when either (1) the buffer is full
-     * and another character needs to be written or (2) the pipe_stream is
-     * closed.
-     */
-    char pipe_buffer[6048];
-
-    /**
-     * The number of bytes currently stored within the pipe_buffer.
-     */
-    int pipe_buffer_length;
-
-    /**
-     * The currently-active typescript recording all terminal output, or NULL
-     * if no typescript is being used for the terminal session.
-     */
-    guac_terminal_typescript* typescript;
 
     /**
      * Graphical representation of the current scroll state.
@@ -682,91 +655,6 @@ void guac_terminal_clear_tabs(guac_terminal* term);
  * next tabstop (or the rightmost character, if no more tabstops exist).
  */
 int guac_terminal_next_tab(guac_terminal* term, int column);
-
-/**
- * Opens a new pipe stream, redirecting all output from the given terminal to
- * that pipe stream. If a pipe stream is already open, that pipe stream will
- * be flushed and closed prior to opening the new pipe stream.
- *
- * @param term
- *     The terminal which should redirect output to a new pipe stream having
- *     the given name.
- *
- * @param name
- *     The name of the pipe stream to open.
- */
-void guac_terminal_pipe_stream_open(guac_terminal* term, const char* name);
-
-/**
- * Writes a single byte of data to the pipe stream currently open and
- * associated with the given terminal. The pipe stream must already have been
- * opened via guac_terminal_pipe_stream_open(). If no pipe stream is currently
- * open, this function has no effect. Data written through this function may
- * be buffered.
- *
- * @param term
- *     The terminal whose currently-open pipe stream should be written to.
- *
- * @param c
- *     The byte of data to write to the pipe stream.
- */
-void guac_terminal_pipe_stream_write(guac_terminal* term, char c);
-
-/**
- * Flushes any data currently buffered for the currently-open pipe stream
- * associated with the given terminal. The pipe stream must already have been
- * opened via guac_terminal_pipe_stream_open(). If no pipe stream is currently
- * open or no data is in the buffer, this function has no effect.
- *
- * @param term
- *     The terminal whose pipe stream buffer should be flushed.
- */
-void guac_terminal_pipe_stream_flush(guac_terminal* term);
-
-/**
- * Closes the currently-open pipe stream associated with the given terminal,
- * redirecting all output back to the terminal display.  Any data currently
- * buffered for output to the pipe stream will be flushed prior to closure. The
- * pipe stream must already have been opened via
- * guac_terminal_pipe_stream_open(). If no pipe stream is currently open, this
- * function has no effect.
- *
- * @param term
- *     The terminal whose currently-open pipe stream should be closed.
- */
-void guac_terminal_pipe_stream_close(guac_terminal* term);
-
-/**
- * Requests that the terminal write all output to a new pair of typescript
- * files within the given path and using the given base name. Terminal output
- * will be written to these new files, along with timing information. If the
- * create_path flag is non-zero, the given path will be created if it does not
- * yet exist. If creation of the typescript files or path fails, error messages
- * will automatically be logged, and no typescript will be written. The
- * typescript will automatically be closed once the terminal is freed.
- *
- * @param term
- *     The terminal whose output should be written to a typescript.
- *
- * @param path
- *     The full absolute path to a directory in which the typescript files
- *     should be created.
- *
- * @param name
- *     The base name to use for the typescript files created within the
- *     specified path.
- *
- * @param create_path
- *     Zero if the specified path MUST exist for typescript files to be
- *     written, or non-zero if the path should be created if it does not yet
- *     exist.
- *
- * @return
- *     Zero if the typescript files have been successfully created and a
- *     typescript will be written, non-zero otherwise.
- */
-int guac_terminal_create_typescript(guac_terminal* term, const char* path,
-        const char* name, int create_path);
 
 #endif
 

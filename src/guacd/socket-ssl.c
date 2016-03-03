@@ -77,10 +77,6 @@ static int __guac_socket_ssl_select_handler(guac_socket* socket, int usec_timeou
     struct timeval timeout;
     int retval;
 
-    /* Initialize fd_set with single underlying file descriptor */
-    FD_ZERO(&fds);
-    FD_SET(data->fd, &fds);
-
     /* No timeout if usec_timeout is negative */
     if (usec_timeout < 0)
         retval = select(data->fd + 1, &fds, NULL, NULL, NULL); 
@@ -89,6 +85,10 @@ static int __guac_socket_ssl_select_handler(guac_socket* socket, int usec_timeou
     else {
         timeout.tv_sec = usec_timeout/1000000;
         timeout.tv_usec = usec_timeout%1000000;
+
+        FD_ZERO(&fds);
+        FD_SET(data->fd, &fds);
+
         retval = select(data->fd + 1, &fds, NULL, NULL, &timeout);
     }
 
@@ -117,10 +117,10 @@ static int __guac_socket_ssl_free_handler(guac_socket* socket) {
     return 0;
 }
 
-guac_socket* guac_socket_open_secure(SSL_CTX* context, int fd) {
+guac_socket* guac_socket_open_secure(SSL_CTX* context, int fd, int dump_flag, char* dump_path) {
 
     /* Allocate socket and associated data */
-    guac_socket* socket = guac_socket_alloc();
+    guac_socket* socket = guac_socket_alloc(dump_flag, dump_path);
     guac_socket_ssl_data* data = malloc(sizeof(guac_socket_ssl_data));
 
     /* Init SSL */

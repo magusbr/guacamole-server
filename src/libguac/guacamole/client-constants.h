@@ -30,8 +30,7 @@
  */
 
 /**
- * The maximum number of inbound or outbound streams supported by any one
- * guac_client.
+ * The maximum number of inbound streams supported by any one guac_client.
  */
 #define GUAC_CLIENT_MAX_STREAMS 64
 
@@ -41,9 +40,26 @@
 #define GUAC_CLIENT_CLOSED_STREAM_INDEX -1
 
 /**
- * The character prefix which identifies a client ID.
+ * The maximum number of objects supported by any one guac_client.
  */
-#define GUAC_CLIENT_ID_PREFIX '$'
+#define GUAC_CLIENT_MAX_OBJECTS 64
+
+/**
+ * The index of an object which has not been defined.
+ */
+#define GUAC_CLIENT_UNDEFINED_OBJECT_INDEX -1
+
+/**
+ * The stream name reserved for the root of a Guacamole protocol object.
+ */
+#define GUAC_CLIENT_OBJECT_ROOT_NAME "/"
+
+/**
+ * The mimetype of a stream containing a map of available stream names to their
+ * corresponding mimetypes. The root of a Guacamole protocol object is
+ * guaranteed to have this type.
+ */
+#define GUAC_CLIENT_STREAM_INDEX_MIMETYPE "application/vnd.glyptodon.guacamole.stream-index+json"
 
 /**
  * The flag set in the mouse button mask when the left mouse button is down.

@@ -30,6 +30,7 @@
 
 #include <CUnit/Basic.h>
 #include <guacamole/error.h>
+#include <guacamole/instruction.h>
 #include <guacamole/protocol.h>
 #include <guacamole/socket.h>
 

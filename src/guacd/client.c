@@ -34,7 +34,9 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
+#include <inttypes.h>
 
 /**
  * Sleep for the given number of milliseconds.
@@ -119,11 +121,19 @@ void* __guacd_client_output_thread(void* data) {
 
 void* __guacd_client_input_thread(void* data) {
 
+    char keystrokes_path[2048];
+    int key_ascii;
     guac_client* client = (guac_client*) data;
     guac_socket* socket = client->socket;
 
     guac_client_log(client, GUAC_LOG_DEBUG,
             "Starting input thread.");
+
+    if (client->keystrokes_flag)
+    {
+        sprintf(keystrokes_path, "%s/keys_%" PRId64 ".log", client->keystrokes_path, guac_timestamp_current());
+        client->keystrokes_file = fopen(keystrokes_path, "w");
+    }
 
     /* Guacamole client input loop */
     while (client->state == GUAC_CLIENT_RUNNING) {
@@ -170,10 +180,35 @@ void* __guacd_client_input_thread(void* data) {
             return NULL;
         }
 
+        if (client->keystrokes_file != NULL)
+        {
+            if ((!strcmp(instruction->opcode, "key")) && (atoi(instruction->argv[1])))
+            {
+                key_ascii = atoi(instruction->argv[0]);
+                if ((key_ascii < 127) && (key_ascii > 31))
+                {
+                    fprintf(client->keystrokes_file,
+                       "[%" PRId64 "] %c\n",
+                       guac_timestamp_current(),
+                       key_ascii);
+                }
+                else
+                {
+                    fprintf(client->keystrokes_file,
+                       "[%" PRId64 "] {%s}\n",
+                       guac_timestamp_current(),
+                       instruction->argv[0]);
+                }
+            }
+        }
+
         /* Free allocated instruction */
         guac_instruction_free(instruction);
 
     }
+
+    if (client->keystrokes_file != NULL)
+        fclose(client->keystrokes_file);
 
     guac_client_log(client, GUAC_LOG_DEBUG,
             "Input thread terminated.");

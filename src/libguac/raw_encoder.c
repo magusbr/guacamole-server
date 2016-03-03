@@ -29,15 +29,14 @@
 #include <guacamole/client.h>
 #include <guacamole/protocol.h>
 #include <guacamole/socket.h>
-#include <guacamole/user.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-static void raw_encoder_send_audio(guac_audio_stream* audio,
-        guac_socket* socket) {
+static void raw_encoder_begin_handler(guac_audio_stream* audio) {
 
+    raw_encoder_state* state;
     char mimetype[256];
 
     /* Produce mimetype string from format info */
@@ -45,16 +44,7 @@ static void raw_encoder_send_audio(guac_audio_stream* audio,
             audio->bps, audio->rate, audio->channels);
 
     /* Associate stream */
-    guac_protocol_send_audio(socket, audio->stream, mimetype);
-
-}
-
-static void raw_encoder_begin_handler(guac_audio_stream* audio) {
-
-    raw_encoder_state* state;
-
-    /* Broadcast existence of stream */
-    raw_encoder_send_audio(audio, audio->client->socket);
+    guac_protocol_send_audio(audio->client->socket, audio->stream, mimetype);
 
     /* Allocate and init encoder state */
     audio->data = state = malloc(sizeof(raw_encoder_state));
@@ -65,13 +55,9 @@ static void raw_encoder_begin_handler(guac_audio_stream* audio) {
 
     state->buffer = malloc(state->length);
 
-}
-
-static void raw_encoder_join_handler(guac_audio_stream* audio,
-        guac_user* user) {
-
-    /* Notify user of existence of stream */
-    raw_encoder_send_audio(audio, user->socket);
+    guac_client_log(audio->client, GUAC_LOG_DEBUG,
+            "Using raw encoder (%s) with a %i byte buffer.",
+            mimetype, state->length);
 
 }
 
@@ -157,7 +143,6 @@ guac_audio_encoder _raw8_encoder = {
     .begin_handler = raw_encoder_begin_handler,
     .write_handler = raw_encoder_write_handler,
     .flush_handler = raw_encoder_flush_handler,
-    .join_handler  = raw_encoder_join_handler,
     .end_handler   = raw_encoder_end_handler
 };
 
@@ -167,7 +152,6 @@ guac_audio_encoder _raw16_encoder = {
     .begin_handler = raw_encoder_begin_handler,
     .write_handler = raw_encoder_write_handler,
     .flush_handler = raw_encoder_flush_handler,
-    .join_handler  = raw_encoder_join_handler,
     .end_handler   = raw_encoder_end_handler
 };
 
